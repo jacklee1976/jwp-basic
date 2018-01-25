@@ -11,68 +11,41 @@ import core.jdbc.ConnectionManager;
 import next.model.User;
 
 public class UserDao {
-    public void insert(User user) throws SQLException {
-        Connection con = null;
-        PreparedStatement pstmt = null;
-        try {
-            con = ConnectionManager.getConnection();
-            String sql = "INSERT INTO USERS VALUES (?, ?, ?, ?)";
-            pstmt = con.prepareStatement(sql);
-            pstmt.setString(1, user.getUserId());
-            pstmt.setString(2, user.getPassword());
-            pstmt.setString(3, user.getName());
-            pstmt.setString(4, user.getEmail());
+	public void insert(User user) throws SQLException {
+		JdbcTemplate jdbcTemplate = new JdbcTemplate();
 
-            pstmt.executeUpdate();
-        } finally {
-            if (pstmt != null) {
-                pstmt.close();
-            }
+		String sql = "INSERT INTO USERS VALUES (?, ?, ?, ?)";
+		jdbcTemplate.update(sql, user.getUserId(), user.getPassword(), user.getName(), user.getEmail());
+	}
 
-            if (con != null) {
-                con.close();
-            }
-        }
-    }
+	public void update(User user) throws SQLException {
+		JdbcTemplate jdbcTemplate = new JdbcTemplate();
 
-    public void update(User user) throws SQLException {
-        // TODO 구현 필요함.
-    }
+		String sql = "UPDATE USERS SET password = ?, name = ?, email = ? WHERE userId = ?";
+		jdbcTemplate.update(sql, user.getPassword(), user.getName(), user.getEmail(), user.getUserId());
+	}
 
-    public List<User> findAll() throws SQLException {
-        // TODO 구현 필요함.
-        return new ArrayList<User>();
-    }
+	public List<User> findAll() throws SQLException {
+		JdbcTemplate jdbcTemplate = new JdbcTemplate();
 
-    public User findByUserId(String userId) throws SQLException {
-        Connection con = null;
-        PreparedStatement pstmt = null;
-        ResultSet rs = null;
-        try {
-            con = ConnectionManager.getConnection();
-            String sql = "SELECT userId, password, name, email FROM USERS WHERE userid=?";
-            pstmt = con.prepareStatement(sql);
-            pstmt.setString(1, userId);
+		String sql = "SELECT userId, password, name, email FROM USERS";
+		return jdbcTemplate.query(sql, (ResultSet rs) -> {
+			return new User(rs.getString("userId"), rs.getString("password"), rs.getString("name"),
+				rs.getString("email"));
+		});
+	}
 
-            rs = pstmt.executeQuery();
+	public User findByUserId(String userId) throws SQLException {
+		JdbcTemplate jdbcTemplate = new JdbcTemplate();
 
-            User user = null;
-            if (rs.next()) {
-                user = new User(rs.getString("userId"), rs.getString("password"), rs.getString("name"),
-                        rs.getString("email"));
-            }
+		String sql = "SELECT userId, password, name, email FROM USERS WHERE userid=?";
 
-            return user;
-        } finally {
-            if (rs != null) {
-                rs.close();
-            }
-            if (pstmt != null) {
-                pstmt.close();
-            }
-            if (con != null) {
-                con.close();
-            }
-        }
-    }
+		return jdbcTemplate.queryForObject(sql,
+			(ResultSet rs) -> {
+				return new User(rs.getString("userId"), rs.getString("password"), rs.getString("name"),
+					rs.getString("email"));
+			}
+			, userId
+		);
+	}
 }

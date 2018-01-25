@@ -1,10 +1,14 @@
 package next.controller;
 
+import java.util.List;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import core.db.DataBase;
 import core.mvc.Controller;
+import next.dao.UserDao;
+import next.model.User;
 
 public class ListUserController implements Controller {
     @Override
@@ -13,7 +17,10 @@ public class ListUserController implements Controller {
             return "redirect:/users/loginForm";
         }
 
-        req.setAttribute("users", DataBase.findAll());
+        UserDao userDao = new UserDao();
+        List<User> users = userDao.findAll();
+
+        req.setAttribute("users", users);
         return "/user/list.jsp";
     }
 }
